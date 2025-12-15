@@ -500,9 +500,7 @@ NIP=YOUR_NIP KSEF_TOKEN=YOUR_TOKEN npm run invoice
 
 ## References
 
-- [KSeF Official Documentation](https://www.gov.pl/web/kas/e-faktury)
-- [KSeF API Documentation](https://www.gov.pl/web/kas/ksef-api)
-- [Polish FA Schema](https://www.gov.pl/web/kas/struktury-fa)
+- [KSeF Documentation](ksef-doc.md) - Local detailed documentation
 
 ## License
 
