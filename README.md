@@ -500,7 +500,8 @@ NIP=YOUR_NIP KSEF_TOKEN=YOUR_TOKEN npm run invoice
 
 ## References
 
-- [KSeF Documentation](ksef-doc.md) - Local detailed documentation
+- [KSeF Documentation Markdown - AI friendly](ksef-doc.md)
+- [Ksef Documentation](https://ksef-test.mf.gov.pl/docs/v2/index.html)
 
 ## License
 
