@@ -15,7 +15,7 @@ class InvoiceProcess {
   }
 
   async getSymmetricEncryptionKey() {
-    const response = await axios.get(`${this.baseUrl}/api/v2/security/public-key-certificates`);
+    const response = await axios.get(`${this.baseUrl}/security/public-key-certificates`);
     const cert = response.data.find(c => c.usage.includes('SymmetricKeyEncryption'));
     if (!cert) throw new Error('No certificate found for symmetric key encryption');
     const base64 = cert.certificate;
@@ -101,7 +101,7 @@ class InvoiceProcess {
   async openSession(symmetricKey, publicKeyPem) {
     const encryptedKey = this.encryptSymmetricKey(symmetricKey, publicKeyPem);
     const response = await axios.post(
-      `${this.baseUrl}/api/v2/sessions/online`,
+      `${this.baseUrl}/sessions/online`,
       {
         formCode: {
           systemCode: 'FA (3)',
@@ -128,7 +128,7 @@ class InvoiceProcess {
     const encryptedHash = this.calculateHash(encryptedInvoice);
 
     const response = await axios.post(
-      `${this.baseUrl}/api/v2/sessions/online/${sessionRef}/invoices`,
+      `${this.baseUrl}/sessions/online/${sessionRef}/invoices`,
       {
         invoiceHash: invoiceHash,
         invoiceSize: Buffer.from(invoiceXml, 'utf8').length,
@@ -148,7 +148,7 @@ class InvoiceProcess {
 
   async closeSession(sessionRef) {
     await axios.post(
-      `${this.baseUrl}/api/v2/sessions/online/${sessionRef}/close`,
+      `${this.baseUrl}/sessions/online/${sessionRef}/close`,
       {},
       {
         headers: {
@@ -160,7 +160,7 @@ class InvoiceProcess {
 
   async checkSessionStatus(sessionRef) {
     const response = await axios.get(
-      `${this.baseUrl}/api/v2/sessions/${sessionRef}`,
+      `${this.baseUrl}/sessions/${sessionRef}`,
       {
         headers: {
           Authorization: `Bearer ${this.accessToken}`
@@ -172,7 +172,7 @@ class InvoiceProcess {
 
   async checkInvoiceStatus(sessionRef, invoiceRef) {
     const response = await axios.get(
-      `${this.baseUrl}/api/v2/sessions/${sessionRef}/invoices/${invoiceRef}`,
+      `${this.baseUrl}/sessions/${sessionRef}/invoices/${invoiceRef}`,
       {
         headers: {
           Authorization: `Bearer ${this.accessToken}`
@@ -180,6 +180,39 @@ class InvoiceProcess {
       }
     );
     return response.data;
+  }
+
+  async getUpoUrl(sessionRef, invoiceRef) {
+    const invoiceStatus = await this.checkInvoiceStatus(sessionRef, invoiceRef);
+    return {
+      upoDownloadUrl: invoiceStatus.upoDownloadUrl,
+      upoDownloadUrlExpirationDate: invoiceStatus.upoDownloadUrlExpirationDate
+    };
+  }
+
+  async getSessionInvoices(sessionRef) {
+    const response = await axios.get(
+      `${this.baseUrl}/sessions/${sessionRef}/invoices`,
+      {
+        headers: {
+          Authorization: `Bearer ${this.accessToken}`
+        }
+      }
+    );
+    return response.data;
+  }
+
+  async getUpoUrlByKsefNumber(sessionRef, ksefNumber) {
+    const sessionInvoices = await this.getSessionInvoices(sessionRef);
+    const invoice = sessionInvoices.invoices.find(inv => inv.ksefNumber === ksefNumber);
+    if (!invoice) {
+      throw new Error(`Invoice with KSeF number ${ksefNumber} not found in session`);
+    }
+    return {
+      upoDownloadUrl: invoice.upoDownloadUrl,
+      upoDownloadUrlExpirationDate: invoice.upoDownloadUrlExpirationDate,
+      invoiceRef: invoice.referenceNumber
+    };
   }
 
   async processInvoice(sellerNip, buyerNip, invoiceNumber) {
@@ -214,6 +247,20 @@ class InvoiceProcess {
     return {
       sessionRef: session.referenceNumber,
       invoiceRef: invoiceResponse.referenceNumber,
+      invoiceInfo: {
+        referenceNumber: invoiceStatus.referenceNumber,
+        ksefNumber: invoiceStatus.ksefNumber,
+        invoiceNumber: invoiceStatus.invoiceNumber,
+        invoiceHash: invoiceStatus.invoiceHash,
+        status: invoiceStatus.status,
+        acquisitionDate: invoiceStatus.acquisitionDate,
+        invoicingDate: invoiceStatus.invoicingDate,
+        permanentStorageDate: invoiceStatus.permanentStorageDate,
+        upoDownloadUrl: invoiceStatus.upoDownloadUrl,
+        upoDownloadUrlExpirationDate: invoiceStatus.upoDownloadUrlExpirationDate,
+        invoicingMode: invoiceStatus.invoicingMode,
+        ordinalNumber: invoiceStatus.ordinalNumber
+      },
       invoiceStatus
     };
   }

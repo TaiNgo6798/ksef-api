@@ -12,7 +12,7 @@ class KsefAuth {
   }
 
   async fetchPublicKey() {
-    const response = await axios.get(`${this.baseUrl}/api/v2/security/public-key-certificates`);
+    const response = await axios.get(`${this.baseUrl}/security/public-key-certificates`);
     const cert = response.data.find(c => c.usage.includes('KsefTokenEncryption'));
     if (!cert) throw new Error('No certificate found for token encryption');
     const base64 = cert.certificate;
@@ -34,13 +34,13 @@ class KsefAuth {
   }
 
   async generateChallenge() {
-    const response = await axios.post(`${this.baseUrl}/api/v2/auth/challenge`);
+    const response = await axios.post(`${this.baseUrl}/auth/challenge`);
     return response.data;
   }
 
   async authenticate(challenge, timestamp) {
     const encryptedToken = this.encryptToken(this.ksefToken, timestamp);
-    const response = await axios.post(`${this.baseUrl}/api/v2/auth/ksef-token`, {
+    const response = await axios.post(`${this.baseUrl}/auth/ksef-token`, {
       challenge,
       contextIdentifier: this.contextIdentifier,
       encryptedToken,
@@ -50,7 +50,7 @@ class KsefAuth {
 
   async checkStatus(referenceNumber, authToken) {
     const response = await axios.get(
-      `${this.baseUrl}/api/v2/auth/${referenceNumber}`,
+      `${this.baseUrl}/auth/${referenceNumber}`,
       { headers: { Authorization: `Bearer ${authToken}` } }
     );
     return response.data;
@@ -68,7 +68,7 @@ class KsefAuth {
 
   async redeemTokens(authToken) {
     const response = await axios.post(
-      `${this.baseUrl}/api/v2/auth/token/redeem`,
+      `${this.baseUrl}/auth/token/redeem`,
       {},
       { headers: { Authorization: `Bearer ${authToken}` } }
     );
@@ -79,7 +79,7 @@ class KsefAuth {
 
   async refreshAccessToken() {
     const response = await axios.post(
-      `${this.baseUrl}/api/v2/auth/token/refresh`,
+      `${this.baseUrl}/auth/token/refresh`,
       {},
       { headers: { Authorization: `Bearer ${this.refreshToken}` } }
     );

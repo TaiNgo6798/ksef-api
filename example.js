@@ -3,7 +3,7 @@ const crypto = require('crypto');
 const KsefAuth = require('./ksef-auth');
 
 async function getSymmetricEncryptionKey(baseUrl) {
-    const response = await axios.get(`${baseUrl}/api/v2/security/public-key-certificates`);
+    const response = await axios.get(`${baseUrl}/security/public-key-certificates`);
     const cert = response.data.find(c => c.usage.includes('SymmetricKeyEncryption'));
     if (!cert) throw new Error('No certificate found for symmetric key encryption');
     const base64 = cert.certificate;
@@ -114,7 +114,7 @@ function calculateHash(data) {
 async function openSession(baseUrl, accessToken, symmetricKey, publicKeyPem) {
     const encryptedKey = encryptSymmetricKey(symmetricKey, publicKeyPem);
     const response = await axios.post(
-        `${baseUrl}/api/v2/sessions/online`,
+        `${baseUrl}/sessions/online`,
         {
             formCode: {
                 systemCode: 'FA (3)',
@@ -141,7 +141,7 @@ async function sendInvoice(baseUrl, accessToken, sessionRef, invoiceXml, symmetr
     const encryptedHash = calculateHash(encryptedInvoice);
 
     const response = await axios.post(
-        `${baseUrl}/api/v2/sessions/online/${sessionRef}/invoices`,
+        `${baseUrl}/sessions/online/${sessionRef}/invoices`,
         {
             invoiceHash: invoiceHash,
             invoiceSize: Buffer.from(invoiceXml, 'utf8').length,
@@ -161,7 +161,7 @@ async function sendInvoice(baseUrl, accessToken, sessionRef, invoiceXml, symmetr
 
 async function closeSession(baseUrl, accessToken, sessionRef) {
     await axios.post(
-        `${baseUrl}/api/v2/sessions/online/${sessionRef}/close`,
+        `${baseUrl}/sessions/online/${sessionRef}/close`,
         {},
         {
             headers: {
@@ -173,7 +173,7 @@ async function closeSession(baseUrl, accessToken, sessionRef) {
 
 async function checkInvoiceStatus(baseUrl, accessToken, sessionRef, invoiceRef) {
     const response = await axios.get(
-        `${baseUrl}/api/v2/sessions/${sessionRef}/invoices/${invoiceRef}`,
+        `${baseUrl}/sessions/${sessionRef}/invoices/${invoiceRef}`,
         {
             headers: {
                 Authorization: `Bearer ${accessToken}`
@@ -183,12 +183,13 @@ async function checkInvoiceStatus(baseUrl, accessToken, sessionRef, invoiceRef) 
     return response.data;
 }
 
+
 async function main() {
     const NIP = process.env.NIP || '3343445677';
     const KSEF_TOKEN = process.env.KSEF_TOKEN || '20251214-EC-1471782000-63005C3E4E-38|nip-3343445677|a0d637b841fe4eb6a52ecec13f9ba9263826ce07df1646178acbf02a645ed9e0';
     const BUYER_NIP = process.env.BUYER_NIP || '1234567890';
     const INVOICE_NUMBER = process.env.INVOICE_NUMBER || `FA/TEST/${Date.now()}`;
-    const baseUrl = 'https://ksef-test.mf.gov.pl';
+    const baseUrl = 'https://api-test.ksef.mf.gov.pl/v2';
 
     const auth = new KsefAuth({
         baseUrl: baseUrl,
@@ -223,9 +224,13 @@ async function main() {
         const invoiceStatus = await checkInvoiceStatus(baseUrl, accessToken, session.referenceNumber, invoiceResponse.referenceNumber);
         console.log('Invoice status:', invoiceStatus.status);
 
-        if (invoiceStatus.upoDownloadUrl) {
-            console.log('UPO available at:', invoiceStatus.upoDownloadUrl);
-        }
+        console.log('\n=== Invoice Information ===');
+        console.log(JSON.stringify(invoiceStatus, null, 2));
+        console.log('==========================\n');
+        
+        // Example: How to get a fresh UPO URL
+        console.log('Note: To get a fresh UPO URL, just call checkInvoiceStatus() again.');
+        console.log('The API regenerates the UPO URL on each GET request.\n');
     } catch (error) {
         console.error('Error:', error.message);
         if (error.response) {
