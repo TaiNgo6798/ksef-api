@@ -7,11 +7,16 @@
     "start": "node example.js",
     "invoice": "node invoice-process.js"
   },
-  "keywords": ["ksef", "authentication", "nodejs", "axios"],
+  "keywords": [
+    "ksef",
+    "authentication",
+    "nodejs",
+    "axios"
+  ],
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "axios": "^1.7.2"
+    "axios": "^1.7.2",
+    "fast-xml-parser": "^5.3.3"
   }
 }
-
