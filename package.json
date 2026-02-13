@@ -4,8 +4,7 @@
   "description": "KSeF authentication with Node.js",
   "main": "ksef-auth.js",
   "scripts": {
-    "start": "node example.js",
-    "invoice": "node invoice-process.js"
+    "start": "node example.js"
   },
   "keywords": [
     "ksef",
