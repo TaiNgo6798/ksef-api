@@ -57,12 +57,19 @@ async function main() {
         // Check invoice status
         const invoiceStatus = await client.checkInvoiceStatus(invoiceResponse.referenceNumber, closedSessionRef);
         console.log('Invoice status:', invoiceStatus.status);
-
         console.log('Invoice UPO URL:', JSON.stringify(invoiceStatus, null, 2));
 
-        // Example: How to get a fresh UPO URL
-        console.log('Note: To get a fresh UPO URL, just call checkInvoiceStatus() again.');
-        console.log('The API regenerates the UPO URL on each GET request.\n');
+        // Final UI Display Example (matches your screenshot)
+        const uiData = client.prepareUiStatus(invoiceStatus);
+        console.log('\n--- Final UI Data (as shown in your image) ---');
+        console.table({
+            'Referenz': uiData.reference,
+            'KSeF-Nummer': uiData.ksefNumber,
+            'Übernahmedatum': uiData.acquisitionDate,
+            'Rechnungsdatum': uiData.invoicingDate,
+            'UPO-Link gültig bis': uiData.upoExpiresAt,
+            'Download URL': uiData.upoUrl?.substring(0, 50) + '...'
+        });
     } catch (error) {
         console.error('Error:', error.message);
         if (error.response) {
