@@ -59,17 +59,6 @@ async function main() {
         console.log('Invoice status:', invoiceStatus.status);
         console.log('Invoice UPO URL:', JSON.stringify(invoiceStatus, null, 2));
 
-        // Final UI Display Example (matches your screenshot)
-        const uiData = client.prepareUiStatus(invoiceStatus);
-        console.log('\n--- Final UI Data (as shown in your image) ---');
-        console.table({
-            'Referenz': uiData.reference,
-            'KSeF-Nummer': uiData.ksefNumber,
-            'Übernahmedatum': uiData.acquisitionDate,
-            'Rechnungsdatum': uiData.invoicingDate,
-            'UPO-Link gültig bis': uiData.upoExpiresAt,
-            'Download URL': uiData.upoUrl?.substring(0, 50) + '...'
-        });
     } catch (error) {
         console.error('Error:', error.message);
         if (error.response) {
